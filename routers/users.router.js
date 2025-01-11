@@ -1,5 +1,5 @@
 import express from "express";
-import connection from "../connection/db.js"
+import connection from "../connection/db.js";
 import schemaCheck from "../validations/schema-check.js";
 import userSchemas from "../validations/user.schemas.js";
 import multer from "multer";
@@ -7,44 +7,80 @@ import multer from "multer";
 const usersRouter = express.Router();
 const upload = multer();
 
-// status 0+
-usersRouter.get("/me", upload.none());
-
-usersRouter.patch("/me", upload.single(), schemaCheck(userSchemas.body), (req, res) => {
-    res.send("patched yourself")
+//status 2+
+usersRouter.get("/employees", (req, res) => {
+  res.send("searched employees");
 });
 
-usersRouter.get("/:id", upload.none());
+// status 0+
+usersRouter.get("/me", (req, res) => {
+  res.send("get me");
+});
 
-usersRouter.get("/:id/cars");
+usersRouter.patch(
+  "/me",
+  upload.single(),
+  schemaCheck(userSchemas.user),
+  (req, res) => {
+    res.send("patched yourself");
+  },
+);
 
-usersRouter.get("/me/orders");
+usersRouter.get("/:id", (req, res) => {
+  res.send("user by id");
+});
+
+usersRouter.get("/:id/cars", (req, res) => {
+  res.send("cars by user id");
+});
+
+usersRouter.get("/me/orders", (req, res) => {
+  res.send("my orders");
+});
 
 //status 1+
-usersRouter.get("/me/cars");
+usersRouter.get("/me/cars", (req, res) => {
+  res.send("my cars");
+});
 
-usersRouter.patch("/me/cars/change-visible-all");
+usersRouter.patch("/me/cars/change-visible-all", (req, res) => {
+  res.send("hide/show all my cars");
+});
 
 //status 2+
-usersRouter.get("/employees", upload.none(), schemaCheck(userSchemas.queries), (req, res) => {
-    res.send("searched employees")
+usersRouter.patch("/:id/cars/change-visible-all", (req, res) => {
+  res.send("hide/show all user`s cars");
 });
 
-usersRouter.patch("/:id/cars/change-visible-all");
-
-usersRouter.get("/:id/orders")
+usersRouter.get("/:id/orders", (req, res) => {
+  res.send("orders by user id");
+});
 
 //status 3+
-usersRouter.patch("/:id", upload.none(), schemaCheck(userSchemas.body), (req, res) => {
-    res.send("patched user")
+usersRouter.patch(
+  "/:id",
+  upload.none(),
+  schemaCheck(userSchemas.user),
+  (req, res) => {
+    res.send("patched user");
+  },
+);
+
+usersRouter.patch(
+  "/:id/ban",
+  upload.none(),
+  schemaCheck(userSchemas.ban),
+  (req, res) => {
+    res.send("ban user");
+  },
+);
+
+usersRouter.patch("/:id/dismiss", (req, res) => {
+  res.send("dismiss employee");
 });
 
-usersRouter.patch("/:id/ban");
-
-usersRouter.patch("/:id/dismiss");
-
-usersRouter.get("/", upload.none(), schemaCheck(userSchemas.queries), (req, res) => {
-    res.send("searched user")
+usersRouter.get("/", (req, res) => {
+  res.send("searched user");
 });
 
 export default usersRouter;

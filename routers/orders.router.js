@@ -1,13 +1,29 @@
 import express from "express";
 import connection from "../connection/db.js"
+import multer from "multer";
+import schemaCheck from "../validations/schema-check.js";
+import orderSchemas from "../validations/order.schemas.js";
+
 const ordersRouter = express.Router();
+const upload = multer();
 
 //status 0+
-ordersRouter.post("/");
+ordersRouter.post("/", upload.none(), schemaCheck(orderSchemas.addition), (req, res) => {
+    res.send("add order")
+});
 
 ordersRouter.get("/:id");
 
-ordersRouter.patch("/:id");
+ordersRouter.patch(
+  "/:id",
+  upload.none(),
+  schemaCheck(orderSchemas.changing),
+  (req, res) => {
+    res.send("edit order");
+  },
+);
+
+ordersRouter.patch("/:id/pay");
 
 ordersRouter.patch("/:id/pass");
 

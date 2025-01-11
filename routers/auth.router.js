@@ -7,18 +7,35 @@ import multer from "multer";
 const authRouter = express.Router();
 const upload = multer();
 
-authRouter.post("/register", upload.none(), schemaCheck(authSchemas.registration), (req, res) => {
+authRouter.post(
+  "/register",
+  upload.none(),
+  schemaCheck(authSchemas.registration),
+  (req, res) => {
     res.send("registered");
-});
+  },
+);
 
-authRouter.post("/login", upload.none(), schemaCheck(authSchemas.login), (req, res) => {
-    res.send("logined")
-});
+authRouter.post(
+  "/login",
+  upload.none(),
+  schemaCheck(authSchemas.login),
+  (req, res) => {
+    res.send("logined");
+  },
+);
 
-authRouter.patch("/change-password", upload.none(), schemaCheck(authSchemas.changePassword), (req, res) => {
-    res.send("password changed")
-});
+authRouter.patch(
+  "/change-password",
+  upload.none(),
+  schemaCheck(authSchemas.changePassword),
+  (req, res) => {
+    res.send("password changed");
+  },
+);
 
-authRouter.post("/logout");
+authRouter.post("/logout", (req, res) => {
+  res.send("logouted");
+});
 
 export default authRouter;
