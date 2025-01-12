@@ -1,5 +1,4 @@
 import express from "express";
-import connection from "../connection/db.js";
 import schemaCheck from "../validations/schema-check.js";
 import userSchemas from "../validations/user.schemas.js";
 import multer from "multer";
@@ -37,6 +36,15 @@ usersRouter.get("/:id/cars", (req, res) => {
 usersRouter.get("/me/orders", (req, res) => {
   res.send("my orders");
 });
+
+usersRouter.patch("/me/vk-request-code", (req, res) => {
+  res.send("requesting vk");
+});
+
+usersRouter.patch("/me/vk-try-confirm", (req, res) => {
+  res.send("confirm vk");
+});
+
 
 //status 1+
 usersRouter.get("/me/cars", (req, res) => {

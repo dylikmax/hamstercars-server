@@ -1,5 +1,4 @@
 import express from "express";
-import connection from "../connection/db.js"
 import multer from "multer";
 import schemaCheck from "../validations/schema-check.js";
 import orderSchemas from "../validations/order.schemas.js";

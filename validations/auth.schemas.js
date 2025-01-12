@@ -23,7 +23,6 @@ const authSchemas = {
     body("bankAcc")
       .isInt({ min: 100000, max: 999999 })
       .withMessage("Bank account must be a number with 6 digits."),
-    body("VK_ID").isInt().withMessage("Invalid VK ID."),
   ],
   login: [
     body("login")

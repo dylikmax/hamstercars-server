@@ -1,8 +1,9 @@
 import express from "express";
-import connection from "../connection/db.js";
 import schemaCheck from "../validations/schema-check.js";
 import authSchemas from "../validations/auth.schemas.js";
 import multer from "multer";
+import vkApiProvider from "../providers/vk-api.provider.js";
+import mysqlProvider from "../providers/mysql.provider.js";
 
 const authRouter = express.Router();
 const upload = multer();
@@ -11,8 +12,28 @@ authRouter.post(
   "/register",
   upload.none(),
   schemaCheck(authSchemas.registration),
-  (req, res) => {
-    res.send("registered");
+  async (req, res) => {
+    try {
+      const user = req.body;
+
+      const realVkId = await vkApiProvider.getRealId(user.VK_ID);
+      const isVkUnique = await mysqlProvider.isUniqueVkId(realVkId);
+
+      if (!isVkUnique) {
+        throw new Error("User with this VK is already exist.");
+      }
+
+      const result = await mysqlProvider.addUser({
+        ...user,
+        VK_ID: realVkId,
+      });
+
+      const userId = result[0].insertId;
+
+      res.json();
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   },
 );
 
@@ -20,8 +41,20 @@ authRouter.post(
   "/login",
   upload.none(),
   schemaCheck(authSchemas.login),
-  (req, res) => {
-    res.send("logined");
+  async (req, res) => {
+    try {
+      const { login, password } = req.body;
+
+      const user = await mysqlProvider.authenticateUser(login, password);
+
+      res.json();
+    } catch (error) {
+
+      if (error.message === "Wrong password.") {
+        return res.status(401).json({ error: error.message });
+      }
+      res.status(404).json({ error: error.message });
+    }
   },
 );
 

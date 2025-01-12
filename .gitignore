@@ -1,2 +1,4 @@
 /node_modules
 mysql-settings.js
+secret-keys.js
+VK-access-key.js
