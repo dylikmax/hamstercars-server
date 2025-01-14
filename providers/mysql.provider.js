@@ -49,15 +49,34 @@ class mysqlProvider {
       throw new Error("Wrong password.");
     }
 
-    return rows[0];
+    return user;
   };
 
-  static changePassword = async (oldPassword, newPassword) => {};
+  static changePassword = async (userId, oldPassword, newPassword) => {
+    const [rows] = await this.#connection.query(
+      "SELECT * FROM users WHERE id = ?",
+      [userId],
+    );
+
+    if (rows[0].length === 0) {
+      throw new Error("User doesn't exist.");
+    }
+
+    const { password: currentPassword } = rows[0];
+
+    if (!bcrypt.compareSync(oldPassword, currentPassword)) {
+      throw new Error("Wrong password.");
+    }
+
+    const hashedPassword = bcrypt.hashSync(newPassword, salt);
+    await this.#connection.query("UPDATE users SET password = ? WHERE id = ?;", [hashedPassword, userId]);
+  };
 
   static addToken = async (token) => {
-    this.#connection.query("INSERT INTO refresh_tokens (token) VALUES (?)", [
-      token,
-    ]);
+    await this.#connection.query(
+      "INSERT INTO refresh_tokens (token) VALUES (?)",
+      [token],
+    );
   };
 
   static isValidToken = async (token) => {
@@ -66,15 +85,14 @@ class mysqlProvider {
       [token],
     );
 
-    return !!result[0].length
+    return !!result[0].length;
   };
 
   static deleteToken = async (token) => {
-    await this.#connection.query(
-      "DELETE FROM refresh_tokens WHERE token = ?",
-      [token],
-    );
-  }
+    await this.#connection.query("DELETE FROM refresh_tokens WHERE token = ?", [
+      token,
+    ]);
+  };
 }
 
 export default mysqlProvider;

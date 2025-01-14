@@ -6,6 +6,7 @@ import vkApiProvider from "../providers/vk-api.provider.js";
 import mysqlProvider from "../providers/mysql.provider.js";
 import authProvider from "../providers/auth.provider.js";
 import cookieProvider from "../providers/cookie.provider.js";
+import authMiddleware from "../middlewares/auth.middleware.js";
 
 const authRouter = express.Router();
 const upload = multer();
@@ -53,12 +54,12 @@ authRouter.post(
       const user = await mysqlProvider.authenticateUser(login, password);
       const tokens = await authProvider.createTokens(user.id, user.status);
 
-      cookieProvider.setTokens(res, tokens)
+      cookieProvider.setTokens(res, tokens);
 
       res.json();
     } catch (error) {
       if (error.message === "Wrong password.") {
-        return res.status(401).json({ error: error.message });
+        return res.status(400).json({ error: error.message });
       }
       res.status(404).json({ error: error.message });
     }
@@ -69,11 +70,23 @@ authRouter.patch(
   "/change-password",
   upload.none(),
   schemaCheck(authSchemas.changePassword),
-  async (req, res) => {},
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { oldPassword, newPassword } = req.body;
+
+      await mysqlProvider.changePassword(req.user.id, oldPassword, newPassword);
+      res.json();
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
 );
 
-authRouter.post("/logout", (req, res) => {
-  res.send("logouted");
+authRouter.post("/logout", authMiddleware, async (req, res) => {
+  await mysqlProvider.deleteToken(req.cookies.refresh_token);
+  cookieProvider.deleteTokens(res);
+  res.json();
 });
 
 export default authRouter;

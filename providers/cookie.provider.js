@@ -15,6 +15,11 @@ class cookieProvider {
 
     return { accessToken, refreshToken };
   };
+
+  static deleteTokens = (res) => {
+    res.cookie("access_token", "", this.#cookieSettings);
+    res.cookie("refresh_token", "", this.#cookieSettings);
+  }
 }
 
 export default cookieProvider;

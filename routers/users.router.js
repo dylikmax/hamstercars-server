@@ -8,14 +8,14 @@ const usersRouter = express.Router();
 const upload = multer();
 
 //status 2+
-usersRouter.get("/employees", (req, res) => {
+usersRouter.get("/employees", authMiddleware, (req, res) => {
   res.send("searched employees");
 });
 
 // status 0+
 usersRouter.get("/me", authMiddleware, (req, res) => {
   console.log(req.user);
-  
+
   res.send("get me");
 });
 
@@ -23,6 +23,7 @@ usersRouter.patch(
   "/me",
   upload.single(),
   schemaCheck(userSchemas.user),
+  authMiddleware,
   (req, res) => {
     res.send("patched yourself");
   },
@@ -36,34 +37,37 @@ usersRouter.get("/:id/cars", (req, res) => {
   res.send("cars by user id");
 });
 
-usersRouter.get("/me/orders", (req, res) => {
+usersRouter.get("/me/orders", authMiddleware, (req, res) => {
   res.send("my orders");
 });
 
-usersRouter.patch("/me/vk-request-code", (req, res) => {
+usersRouter.patch("/me/vk-request-code", authMiddleware, (req, res) => {
   res.send("requesting vk");
 });
 
-usersRouter.patch("/me/vk-try-confirm", (req, res) => {
+usersRouter.patch("/me/vk-try-confirm", authMiddleware, (req, res) => {
   res.send("confirm vk");
 });
 
-
 //status 1+
-usersRouter.get("/me/cars", (req, res) => {
+usersRouter.get("/me/cars", authMiddleware, (req, res) => {
   res.send("my cars");
 });
 
-usersRouter.patch("/me/cars/change-visible-all", (req, res) => {
+usersRouter.patch("/me/cars/change-visible-all", authMiddleware, (req, res) => {
   res.send("hide/show all my cars");
 });
 
 //status 2+
-usersRouter.patch("/:id/cars/change-visible-all", (req, res) => {
-  res.send("hide/show all user`s cars");
-});
+usersRouter.patch(
+  "/:id/cars/change-visible-all",
+  authMiddleware,
+  (req, res) => {
+    res.send("hide/show all user`s cars");
+  },
+);
 
-usersRouter.get("/:id/orders", (req, res) => {
+usersRouter.get("/:id/orders", authMiddleware, (req, res) => {
   res.send("orders by user id");
 });
 
@@ -72,6 +76,7 @@ usersRouter.patch(
   "/:id",
   upload.none(),
   schemaCheck(userSchemas.user),
+  authMiddleware,
   (req, res) => {
     res.send("patched user");
   },
@@ -81,16 +86,17 @@ usersRouter.patch(
   "/:id/ban",
   upload.none(),
   schemaCheck(userSchemas.ban),
+  authMiddleware,
   (req, res) => {
     res.send("ban user");
   },
 );
 
-usersRouter.patch("/:id/dismiss", (req, res) => {
+usersRouter.patch("/:id/dismiss", authMiddleware, (req, res) => {
   res.send("dismiss employee");
 });
 
-usersRouter.get("/", (req, res) => {
+usersRouter.get("/", authMiddleware, (req, res) => {
   res.send("searched user");
 });
 
