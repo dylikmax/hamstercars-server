@@ -4,6 +4,8 @@ import authSchemas from "../validations/auth.schemas.js";
 import multer from "multer";
 import vkApiProvider from "../providers/vk-api.provider.js";
 import mysqlProvider from "../providers/mysql.provider.js";
+import authProvider from "../providers/auth.provider.js";
+import cookieProvider from "../providers/cookie.provider.js";
 
 const authRouter = express.Router();
 const upload = multer();
@@ -29,6 +31,9 @@ authRouter.post(
       });
 
       const userId = result[0].insertId;
+      const tokens = await authProvider.createTokens(userId, 0);
+
+      cookieProvider.setTokens(res, tokens);
 
       res.json();
     } catch (error) {
@@ -46,10 +51,12 @@ authRouter.post(
       const { login, password } = req.body;
 
       const user = await mysqlProvider.authenticateUser(login, password);
+      const tokens = await authProvider.createTokens(user.id, user.status);
+
+      cookieProvider.setTokens(res, tokens)
 
       res.json();
     } catch (error) {
-
       if (error.message === "Wrong password.") {
         return res.status(401).json({ error: error.message });
       }
@@ -62,9 +69,7 @@ authRouter.patch(
   "/change-password",
   upload.none(),
   schemaCheck(authSchemas.changePassword),
-  (req, res) => {
-    res.send("password changed");
-  },
+  async (req, res) => {},
 );
 
 authRouter.post("/logout", (req, res) => {

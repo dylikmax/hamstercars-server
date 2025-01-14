@@ -14,7 +14,7 @@ const authSchemas = {
       .isLength({ min: 2 })
       .withMessage("Name should be at least 2 characters long.")
       .isLength({ max: 21 })
-      .withMessage("Nameshould be no more than 21 characters long."),
+      .withMessage("Name should be no more than 21 characters long."),
     body("surname")
       .isLength({ min: 2 })
       .withMessage("Surname should be at least 2 characters long.")

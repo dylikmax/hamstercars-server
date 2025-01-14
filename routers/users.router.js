@@ -2,6 +2,7 @@ import express from "express";
 import schemaCheck from "../validations/schema-check.js";
 import userSchemas from "../validations/user.schemas.js";
 import multer from "multer";
+import authMiddleware from "../middlewares/auth.middleware.js";
 
 const usersRouter = express.Router();
 const upload = multer();
@@ -12,7 +13,9 @@ usersRouter.get("/employees", (req, res) => {
 });
 
 // status 0+
-usersRouter.get("/me", (req, res) => {
+usersRouter.get("/me", authMiddleware, (req, res) => {
+  console.log(req.user);
+  
   res.send("get me");
 });
 

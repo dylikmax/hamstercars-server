@@ -11,7 +11,7 @@ class mysqlProvider {
       [vkId],
     );
 
-    return !!rows.length;
+    return !rows[0].length;
   };
 
   static addUser = async (user) => {
@@ -51,6 +51,30 @@ class mysqlProvider {
 
     return rows[0];
   };
+
+  static changePassword = async (oldPassword, newPassword) => {};
+
+  static addToken = async (token) => {
+    this.#connection.query("INSERT INTO refresh_tokens (token) VALUES (?)", [
+      token,
+    ]);
+  };
+
+  static isValidToken = async (token) => {
+    const result = await this.#connection.query(
+      "SELECT * FROM refresh_tokens WHERE token = ?",
+      [token],
+    );
+
+    return !!result[0].length
+  };
+
+  static deleteToken = async (token) => {
+    await this.#connection.query(
+      "DELETE FROM refresh_tokens WHERE token = ?",
+      [token],
+    );
+  }
 }
 
 export default mysqlProvider;
