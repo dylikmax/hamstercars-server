@@ -7,6 +7,7 @@ import mysqlProvider from "../providers/mysql.provider.js";
 import authProvider from "../providers/auth.provider.js";
 import cookieProvider from "../providers/cookie.provider.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
+import statuses from "../enums/statuses.enum.js";
 
 const authRouter = express.Router();
 const upload = multer();
@@ -70,7 +71,7 @@ authRouter.patch(
   "/change-password",
   upload.none(),
   schemaCheck(authSchemas.changePassword),
-  authMiddleware,
+  authMiddleware(statuses["Заблокирован"]),
   async (req, res) => {
     try {
       const { oldPassword, newPassword } = req.body;
@@ -83,10 +84,14 @@ authRouter.patch(
   },
 );
 
-authRouter.post("/logout", authMiddleware, async (req, res) => {
-  await mysqlProvider.deleteToken(req.cookies.refresh_token);
-  cookieProvider.deleteTokens(res);
-  res.json();
-});
+authRouter.post(
+  "/logout",
+  authMiddleware(statuses["Заблокирован"]),
+  async (req, res) => {
+    await mysqlProvider.deleteToken(req.cookies.refresh_token);
+    cookieProvider.deleteTokens(res);
+    res.json();
+  },
+);
 
 export default authRouter;

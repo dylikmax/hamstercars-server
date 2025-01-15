@@ -18,7 +18,6 @@ const userSchemas = {
       .isInt({ min: 100000, max: 999999 })
       .withMessage("Bank account must be a number with 6 digits.")
       .optional(),
-    body("VK_ID").isInt().withMessage("Invalid VK ID.").optional(),
   ],
   ban: [
     body("banPeriod")

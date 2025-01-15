@@ -1,6 +1,17 @@
 import connection from "../connection/db.js";
 import bcrypt from "bcryptjs";
+import statuses from "../enums/statuses.enum.js";
 const salt = bcrypt.genSaltSync(10);
+
+const statusesNames = {
+  "-1": "Заблокирован",
+  0: "Пользователь",
+  1: "Арендодатель",
+  2: "Товаровед",
+  3: "Заместитель директора",
+  4: "Директор",
+  44: "Папочка",
+};
 
 class mysqlProvider {
   static #connection = connection;
@@ -69,7 +80,42 @@ class mysqlProvider {
     }
 
     const hashedPassword = bcrypt.hashSync(newPassword, salt);
-    await this.#connection.query("UPDATE users SET password = ? WHERE id = ?;", [hashedPassword, userId]);
+    await this.#connection.query(
+      "UPDATE users SET password = ? WHERE id = ?;",
+      [hashedPassword, userId],
+    );
+  };
+
+  static getFullUserInfo = async (id) => {
+    const [rows] = await this.#connection.query(
+      "SELECT * FROM users WHERE id = ?",
+      [id],
+    );
+
+    if (rows.length === 0) {
+      throw new Error("Account with this ID doesn`t exist.");
+    }
+
+    const user = rows[0];
+
+    const date = new Date(user.create_time);
+    const milliseconds = date.getTime();
+
+    return {
+      id: user.id,
+      login: user.login,
+      name: user.name,
+      surname: user.second_name,
+      createAt: milliseconds,
+      bankAcc: user.bank,
+      status: statusesNames[user.status],
+      avatarUrl: user.avatar_url,
+      vkId: user.vk_id,
+      isBanned: user.status === statuses["Заблокирован"],
+      banReason: user.ban_reason ? user.ban_reason : undefined,
+      whoBanned: user.who_banned ? user.who_banned : undefined,
+      isVkConfirmed: !!user.Is_VK_confirmed,
+    };
   };
 
   static addToken = async (token) => {
