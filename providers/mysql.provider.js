@@ -15,6 +15,7 @@ const statusesNames = {
 
 class mysqlProvider {
   static #connection = connection;
+  static #vkCodeMiliseconds = 300000;
 
   static isUniqueVkId = async (vkId) => {
     const rows = await this.#connection.query(
@@ -98,30 +99,65 @@ class mysqlProvider {
 
     const user = rows[0];
 
-    const date = new Date(user.create_time);
-    const milliseconds = date.getTime();
+    return this.#userToCamelCase(user);
+  };
 
-    return {
-      id: user.id,
-      login: user.login,
-      name: user.name,
-      surname: user.second_name,
-      createAt: milliseconds,
-      bankAcc: user.bank,
-      status: statusesNames[user.status],
-      avatarUrl: user.avatar_url,
-      vkId: user.vk_id,
-      isBanned: user.status === statuses["Заблокирован"],
-      banReason: user.ban_reason ? user.ban_reason : undefined,
-      whoBanned: user.who_banned ? user.who_banned : undefined,
-      isVkConfirmed: !!user.Is_VK_confirmed,
-    };
+  static filterByLargerStatus = async (status) => {
+    const [users] = await this.#connection.query(
+      "SELECT * FROM users WHERE status >= ?",
+      [status],
+    );
+
+    return users.map((user) => this.#userToCamelCase(user));
+  };
+
+  static addVkCode = async (userId, code) => {
+    const { vkId } = this.getFullUserInfo(userId);
+
+    const [usersWithThisVK] = await this.#connection.query(
+      "SELECT * FROM users WHERE vk_id = ? AND is_vk_confirmed = 1",
+      [vkId],
+    );
+
+    if (usersWithThisVK.length !== 0) {
+      throw new Error("User with this VK already exist.");
+    }
+
+    const vkExpTime = this.#timestampToIso(
+      Date.now() + this.#vkCodeMiliseconds,
+    );
+
+    await this.#connection.query(
+      "UPDATE users SET VK_confirm_code = ?, VK_exp_time = ? WHERE id = ?;",
+      [code, vkExpTime, userId],
+    );
   };
 
   static addToken = async (token) => {
     await this.#connection.query(
       "INSERT INTO refresh_tokens (token) VALUES (?)",
       [token],
+    );
+  };
+
+  static checkVkCode = async (userId, code) => {
+    const [users] = await this.#connection.query(
+      "SELECT * FROM users WHERE id = ?",
+      [userId],
+    );
+    const { VK_confirm_code: actualCode, VK_exp_time: expireTime } = users[0];
+
+    if (code != actualCode) {
+      throw new Error("Incorrect code.");
+    }
+
+    if (this.#isoToTimestamp(expireTime) < Date.now()) {
+      throw new Error("Time to enter the code expired.");
+    }
+
+    await this.#connection.query(
+      "UPDATE users SET Is_VK_confirmed = 1 WHERE id = ?;",
+      [userId],
     );
   };
 
@@ -139,6 +175,31 @@ class mysqlProvider {
       token,
     ]);
   };
+
+  static #userToCamelCase = (user) => ({
+    id: user.id,
+    login: user.login,
+    name: user.name,
+    surname: user.second_name,
+    createAt: this.#isoToTimestamp(user.create_time),
+    bankAcc: user.bank,
+    status: statusesNames[user.status],
+    avatarUrl: user.avatar_url,
+    vkId: user.vk_id,
+    isBanned: user.status === statuses["Заблокирован"],
+    banReason: user.ban_reason ? user.ban_reason : undefined,
+    whoBanned: user.who_banned ? user.who_banned : undefined,
+    isVkConfirmed: !!user.Is_VK_confirmed,
+  });
+
+  static #timestampToIso = (timestamp) => {
+    const date = new Date(timestamp + 3 * 60 * 60 * 1000);
+    const isoString = date.toISOString();
+    const mysqlFormat = isoString.slice(0, 19).replace("T", " ");
+    return mysqlFormat;
+  };
+
+  static #isoToTimestamp = (isoTime) => Date.parse(isoTime);
 }
 
 export default mysqlProvider;

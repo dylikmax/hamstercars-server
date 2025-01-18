@@ -27,6 +27,11 @@ const userSchemas = {
       .isLength({ max: 100 })
       .withMessage("Ban reason must be shorter than 100 characters long."),
   ],
+  vkAccept: [
+    body("code")
+      .isInt({ min: 1000, max: 9999 })
+      .withMessage("Accept code should be a four-digit number."),
+  ],
 };
 
 export default userSchemas;
