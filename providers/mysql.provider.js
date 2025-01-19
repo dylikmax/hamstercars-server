@@ -161,6 +161,32 @@ class mysqlProvider {
     );
   };
 
+  static changeUserBan = async (userId, banReason, adminId) => {
+    const { status } = await this.getFullUserInfo(userId);
+    
+    if (status === "Заблокирован") {
+      if (banReason) {
+        throw new Error("User account is already have ban.");
+      }
+
+      await this.#connection.query(
+        "UPDATE users SET status = 0, ban_reason = null, who_banned = null WHERE id = ?;",
+        [userId],
+      );
+
+      return;
+    }
+
+    if (status !== "Пользователь") {
+      throw new Error("You cannot ban an employee.")
+    }
+
+    await this.#connection.query(
+      "UPDATE users SET status = -1, ban_reason = ?, who_banned = ? WHERE id = ?;",
+      [banReason, adminId, userId],
+    );
+  };
+
   static isValidToken = async (token) => {
     const result = await this.#connection.query(
       "SELECT * FROM refresh_tokens WHERE token = ?",

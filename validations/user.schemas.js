@@ -20,12 +20,9 @@ const userSchemas = {
       .optional(),
   ],
   ban: [
-    body("banPeriod")
-      .isInt({ min: 1 })
-      .withMessage("Ban period should be larger than one day."),
     body("banReason")
       .isLength({ max: 100 })
-      .withMessage("Ban reason must be shorter than 100 characters long."),
+      .withMessage("Ban reason must be shorter than 100 characters long.")
   ],
   vkAccept: [
     body("code")

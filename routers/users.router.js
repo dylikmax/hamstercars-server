@@ -136,7 +136,7 @@ usersRouter.patch(
   async (req, res) => {
     try {
       const code = req.body.code;
-      
+
       await mysqlProvider.checkVkCode(req.user.id, code);
       res.json();
     } catch (error) {
@@ -184,8 +184,35 @@ usersRouter.patch(
   upload.none(),
   schemaCheck(userSchemas.ban),
   authMiddleware(statuses["Заместитель директора"]),
-  (req, res) => {
-    res.send("ban user");
+  async (req, res) => {
+    try {
+      const { banReason } = req.body;
+      const { id } = req.params;
+      const adminId = req.user.id;
+
+      await mysqlProvider.changeUserBan(id, banReason, adminId);
+
+      res.json();
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+);
+
+usersRouter.patch(
+  "/:id/unban",
+  upload.none(),
+  authMiddleware(statuses["Заместитель директора"]),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      await mysqlProvider.changeUserBan(id);
+
+      res.json();
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
   },
 );
 
